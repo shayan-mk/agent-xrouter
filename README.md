@@ -10,13 +10,19 @@ models. The package currently provides an inference-only fixed router:
   heuristic; and
 - return a local/cloud `RoutePlan` without performing model transport.
 
+An optional, default-off evolution layer adds exact and semantic classifier
+caches, vector-only outcome memory, a signed local-judge rubric, and conservative
+quality/cost-aware bandit overrides. It updates decisions from completed outcomes
+without training or changing classifier weights.
+
 Privacy enforcement is configurable and disabled by default for complexity-only
 experiments. Enable it for deployments that need S2 redaction and S3 forced-local
 routing.
 
-The package has no runtime dependencies. An LLM-backed classifier can run on
-CPU or GPU because the caller owns the inference backend. Heuristic mode needs
-no model server:
+The fixed router has no runtime dependencies. Evolution uses NumPy through the
+`agent-xrouter[evolution]` extra. An LLM-backed classifier and the optional outcome
+judge can run on CPU or GPU because the caller owns the inference backend.
+Heuristic mode needs no model server:
 
 ```python
 from agent_xrouter import ComplexityMode, EdgeRouterEngine, RouterPolicy, RouterRequest
@@ -31,6 +37,6 @@ LLM mode accepts a small async callback implementing `ComplexityBackend`.
 The callback uses a local serving stack; `agent-xrouter` never receives its
 credentials or provider configuration.
 
-Future online bandit memory belongs in `agent_xrouter.evolution`. RL-based
+The online bandit implementation lives in `agent_xrouter.evolution`. RL-based
 evolution may be added later, but the fixed router remains independent and does
 not require training dependencies.

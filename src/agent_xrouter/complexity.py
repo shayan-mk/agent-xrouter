@@ -214,7 +214,9 @@ def _bounded_text(text: str, max_chars: int) -> str:
     return f"{text[:head]}{marker}{text[-(available - head) :]}"
 
 
-def _conversation_preview(request: RouterRequest, max_chars: int) -> str:
+def build_content_preview(request: RouterRequest, max_chars: int) -> str:
+    """Build the bounded privacy-approved text used by caches and classifiers."""
+
     messages = _conversation_messages(request)
     recent = messages[-6:]
     latest_user = next((message for message in reversed(messages) if message[0] == "user"), None)
@@ -231,7 +233,13 @@ def _conversation_preview(request: RouterRequest, max_chars: int) -> str:
 def build_classifier_request(request: RouterRequest, max_chars: int) -> ClassifierRequest:
     """Build a bounded prompt from the user goal and recent progress."""
 
-    content = _conversation_preview(request, max_chars)
+    content = build_content_preview(request, max_chars)
+    return build_classifier_request_from_preview(content)
+
+
+def build_classifier_request_from_preview(content: str) -> ClassifierRequest:
+    """Build a classifier prompt from an already privacy-approved preview."""
+
     if not content:
         raise ValueError("classifier requires a user request")
     return ClassifierRequest(prompt=_PROMPT.format(content=content))
